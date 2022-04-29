@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="database.js"></script>
+    <title>AMQ Training</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #1B1B1B;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: white;
+            font-size: 30px;
+            margin: 10px;
+        }
+        .container {
+            margin: 20px 10px;
+            display: block;
+            clear: both;
+            overflow: auto;
+        }
+        .container_text {
+            margin: 3px 5px;
+            display: block;
+            clear: both;
+            overflow: auto;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 1px;
+        }
+        input[type="checkbox"], input[type="radio"]{
+            margin: 5px;
+            cursor: pointer;
+        }
+        label {
+            cursor: pointer;
+            user-select: none;
+        }
+        button {
+            margin: 0px;
+            padding: 3px 10px;
+            border-radius: 3px;
+            display: inline;
+            cursor: pointer;
+        }
+        select {
+            margin: 0;
+            padding: 3px;
+        }
+        audio {
+            float: left;
+            margin-right: 10px;
+        }
+        .control_button {
+            margin: 0px;
+            float: left;
+            font-size: 40px;
+            display: inline;
+            cursor: pointer;
+            user-select: none;
+        }
+        .control_button:hover {
+            opacity: .5;
+        }
+        .text {
+            color: white;
+            font-size: 20px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        .text_result_link {
+            color: gray;
+            font-size: 20px;
+            text-decoration: none;
+            margin: 0px 2px;
+            display: inline;
+            user-select: none;
+        }
+        .text_result_link:hover {
+            opacity: .5;
+        }
+        .text_result_anime {
+            color: white;
+            font-size: 25px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        .text_result_type {
+            color: gray;
+            font-size: 25px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        .text_result_artist {
+            color: #D95151;
+            font-size: 25px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        .text_result_song {
+            color: #2B8CD7;
+            font-size: 25px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        a.text_list_link {
+            font-size: 20px;
+            margin: 0px 2px;
+            text-decoration: none;
+            display: inline;
+            user-select: none;
+        }
+        a.text_list_link:hover {
+            opacity: .5;
+            text-decoration: none;
+        }
+        .text_list_anime {
+            color: white;
+            font-size: 20px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        .text_list_type {
+            color: gray;
+            font-size: 20px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        .text_list_artist {
+            color: #954747;
+            font-size: 20px;
+            margin: 0px 5px;
+            display: inline;
+        }
+        .text_list_song {
+            color: #457294;
+            font-size: 20px;
+            margin: 0px 5px;
+            display: inline;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>AMQ Training Utility</h1>
+    <div class="container">
+        <input type="checkbox" name="song_type" id="op_checkbox" checked><label for="op_checkbox">OP</label>
+        <input type="checkbox" name="song_type" id="ed_checkbox" checked><label for="ed_checkbox">ED</label>
+        <input type="checkbox" name="song_type" id="in_checkbox" checked><label for="in_checkbox">INS</label>
+        <div class="text" style="margin-left: 30px;">Loop</div>
+        <input type="radio" name="loop" id="loop_off_checkbox" checked><label for="loop_off_checkbox">Off</label>
+        <input type="radio" name="loop" id="loop_current_checkbox"><label for="loop_current_checkbox">Current</label>
+        <input type="radio" name="loop" id="loop_all_checkbox"><label for="loop_all_checkbox">All</label>
+        <input type="checkbox" id="random_checkbox" style="margin-left: 30px;" checked><label for="random_checkbox">Random</label>
+        <input type="checkbox" id="always_show_results_checkbox" style="margin-left: 30px;"><label for="always_show_results_checkbox">Always Show Results</label>
+    </div>
+    <div class="container">
+        <div class="text">Include</div><input type="text" name="include" id="include">
+        <div class="text" style="margin-left: 10px;">Exclude</div><input type="text" id="exclude">
+        <button onclick="clearIncludeExclude()">Clear</button>
+    </div>
+    <div class="container">
+        <select name="artist" id="dropdown"></select>
+        <button onclick="viewList()">View List</button>
+        <button onclick="start()">Start</button>
+        <div id="songs" class="text"></div>
+    </div>
+    <div class="container" id="audio_container">
+        <audio controls autoplay id="player" onended="audioEnd()" onerror="audioError()" src="" type="audio/ogg"></audio>
+        <div class="control_button" onclick="prevSong()">⬅️</div>
+        <div class="control_button" onclick="nextSong()">➡️</div>
+        <div class="control_button" onclick="showResults()">✅</div>
+    </div>
+    <div class="container" id="results"></div>
+
+    <script>
+        // add songs to the list, shuffle, and start
+        function start() {
+            index = 0;
+            list = [];
+            document.querySelector("#audio_container").style.display = "block";
+            for (let x of database[document.querySelector("#dropdown").value]) {
+                if (checkOpening(x) && checkIncludeExclude(x)) {
+                    list.push(x);
+                }
+                else if (checkEnding(x) && checkIncludeExclude(x)) {
+                    list.push(x);
+                }
+                else if (checkInsert(x) && checkIncludeExclude(x)) {
+                    list.push(x);
+                }
+            }
+            if (list.length == 0) {
+                document.querySelector("#songs").innerHTML = "No songs";
+                document.querySelector("#player").src = "";
+                hideResults();
+            }
+            else {
+                if (document.querySelector("#random_checkbox").checked) {
+                    shuffleArray(list);
+                }
+                loadSong();
+            } 
+        }
+    
+        // return true if song is opening and OP checkbox is marked
+        function checkOpening(input) {
+            return input[3].startsWith("Opening") && document.querySelector("#op_checkbox").checked;
+        }
+    
+        // return true if song is ending and ED checkbox is marked
+        function checkEnding(input) {
+            return input[3].startsWith("Ending") && document.querySelector("#ed_checkbox").checked;
+        }
+    
+        // return true if song is insert and INS checkbox is marked
+        function checkInsert(input) {
+            return input[3].startsWith("Insert") && document.querySelector("#in_checkbox").checked;
+        }
+    
+        // return true if song passes include and exclude parameters
+        function checkIncludeExclude(input) {
+            let anime = input[2].toLowerCase().trim();
+            let include_values = [];
+            let exclude_values = [];
+            let result = document.querySelector("#include").value.trim() === "";
+            for (let x of document.querySelector("#include").value.toLowerCase().trim().split(",")) {
+                if (x.trim() !== "") {
+                    include_values.push(x.trim());
+                }
+            }
+            for (let x of document.querySelector("#exclude").value.toLowerCase().trim().split(",")) {
+                if (x.trim() !== "") {
+                    exclude_values.push(x.trim());
+                }
+            }
+            for (let x of include_values) {
+                if (anime.includes(x)) {
+                    result = true;
+                }
+            }
+            for (let x of exclude_values) {
+                if (anime.includes(x)) {
+                    result = false;
+                }
+            }
+            return result;
+        }
+    
+        // clear values in include text box and exclude text box
+        function clearIncludeExclude() {
+            document.querySelector("#include").value = "";
+            document.querySelector("#exclude").value = "";
+        }
+    
+        // load song into audio player and update results
+        function loadSong() {
+            document.querySelector("#player").src = "audio/" + list[index][1].split("/")[3];
+            document.querySelector("#songs").innerHTML = (index + 1) + " / " + list.length;
+            if (document.querySelector("#always_show_results_checkbox").checked) {
+                showResults();
+            } 
+            else {
+                hideResults();
+            }
+        }
+    
+        // go to previous song
+        function prevSong() {
+            if (index > 0) {
+                index--;
+            }
+            else {
+                index = list.length - 1;
+            }
+            loadSong();
+        }
+    
+        // go to next song
+        function nextSong() {
+            if (index < list.length - 1) {
+                index++;
+            }
+            else {
+                index = 0;
+            }
+            loadSong();
+        }
+    
+        // shuffle any array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                let temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+        }
+    
+        // display results
+        function showResults() {
+            document.querySelector("#results").innerHTML =
+            '<div class="container_text" style="margin: 10px 0px;"><div class="text_result_anime">' + list[index][2] +
+            '</div><div class="text_result_type">' + shortenType(list[index][3]) + '</div>' +
+            '<a href="' + list[index][0] + '" class="text_result_link" target="_blank">🎥</a>' + '<a href="' + list[index][1] + '" class="text_result_link" target="_blank">🎵</a></div>' +
+            '<div class="container_text" style="margin: 10px 0px;"><div class="text_result_artist">' + list[index][4] +
+            '</div><div class="text_result_song">' + list[index][5] + '</div></div>';
+            
+        }
+    
+        // hide results
+        function hideResults() {
+            document.querySelector("#results").innerHTML = "";
+        }
+    
+        // when song ends, replay or skip to next depending on loop status
+        function audioEnd() {
+            if (document.querySelector("#loop_current_checkbox").checked) {
+                document.querySelector("#player").src = list[index][0];
+            }
+            if (document.querySelector("#loop_all_checkbox").checked) {
+                nextSong();
+            }
+        }
+    
+        // if local file is not found, try catbox link
+        function audioError() {
+            if (list.length !== 0 && document.querySelector("#player").src.includes("audio")) {
+                document.querySelector("#player").src = list[index][1];
+            }
+        }
+    
+        // display the entire song list according to current rules
+        function viewList() {
+            document.querySelector("#results").innerHTML = "";
+            for (let x of database[document.querySelector("#dropdown").value]) {
+                if ((checkOpening(x) || checkEnding(x) || checkInsert(x)) && checkIncludeExclude(x)) {
+                    document.querySelector("#results").innerHTML += '<div class="container_text">' +
+                    '<a href="' + x[0] + '" class="text_list_link" target="_blank">' + '🎥' + '</a>' +
+                    '<a href="' + x[1] + '" class="text_list_link" target="_blank">' + '🎵' + '</a>' +
+                    '<div class="text_list_anime">' + x[2] + '</div>' +
+                    '<div class="text_list_type">' + shortenType(x[3]) + '</div>' +
+                    '<div class="text_list_artist">' + x[4] + '</div>' +
+                    '<div class="text_list_song">' + x[5] + '</div></div>';
+                }
+            }
+        }
+    
+        // change type text to OP ED IN
+        function shortenType(type) {
+            return type.replace("Opening ", "OP").replace("Ending ", "ED").replace("Insert Song", "IN");
+        }
+    
+        // initial setup
+        let index = 0;
+        let list = [];
+        document.querySelector("#audio_container").style.display = "none";
+        for (let x in database) {
+            document.querySelector("#dropdown").innerHTML += "<option value=\"" + x + "\">" + x + "</option>";
+        }
+        document.addEventListener("keydown", function(e) { if (e.key === "Enter") start(); });
+    </script>
+
+</body>
+
+</html>
