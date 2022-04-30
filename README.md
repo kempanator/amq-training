@@ -17,4 +17,4 @@ A local webpage for practicing matching anime songs to their series. This progra
 4. run update-database.py
 
 ## Downloading lists
-Running download-audio.py will create an audio folder and fill it with mp3 files of every song from every json file. The webpage will automatically try to use local files first then try the catbox link.
+Running download-audio.py will create an audio folder and fill it with mp3 files of every song from every json file. The webpage will automatically try to use local files first then try the url.
