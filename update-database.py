@@ -1,5 +1,5 @@
 # convert json files from anisongdb.com into js dictionary
-# {listname: [["link", "anime", "type", "artist", "song"], ...]}
+# {listname: [["videolink", "audiolink", "anime", "type", "artist", "song"], ...]}
 
 import os
 import json
@@ -35,7 +35,7 @@ for file_name in os.listdir(path + 'json/'):
                 total_songs += 1
             else:
                 print('Missing mp3: ' + x['Anime'] + ', ' + x['Type'] + ', ' + x['Artist'] + ', ' + x['SongName'])
-        song_list = sorted(set(song_list), key=lambda i: i[1] + ' ' + i[2])  # remove duplicates and sort
+        song_list = sorted(set(song_list), key=lambda i: str(i[2] + ' ' + i[3]).lower())  # remove duplicates and sort
         dictionary.update({list_name: song_list})
 
 total_lists = len(dictionary)

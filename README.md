@@ -1,6 +1,6 @@
 # amq-training
 
-A local webpage for practicing matching anime songs to their series. This program reads anisongdb json files and creates a randomized song list that you listen to and click through with arrow buttons. The anime, artist, and song names are hidden until you click the green check button.
+A local webpage for practicing matching anime songs to their series. This program reads anisongdb json files and creates a randomized song list that you listen to and click through with arrow buttons. The anime, artist, and song names are hidden until you click the result button.
 
 ## How to Download
 1. click green code button

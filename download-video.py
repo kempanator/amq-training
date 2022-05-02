@@ -10,7 +10,7 @@ except ModuleNotFoundError:
     subprocess.Popen(["python", "-m", "pip", "install", "-U", 'eyed3']).wait()
     import eyed3
 
-mode = 'audio'  # audio, video, both
+mode = 'video'  # audio, video, both
 path = ''  # optional custom path
 json_path = path + 'json/'
 audio_path = path + 'audio/'

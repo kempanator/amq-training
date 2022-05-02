@@ -28,7 +28,7 @@
             overflow: auto;
         }
         .container_text {
-            margin: 3px 5px;
+            margin: 1px 5px;
             display: block;
             clear: both;
             overflow: auto;
@@ -57,10 +57,22 @@
             padding: 3px;
         }
         audio {
-            float: left;
-            margin-right: 10px;
+            width: 500px;
+        }
+        video {
+            height: 500px;
         }
         .control_button {
+            background: white;
+            color: black;
+            border-radius: 5px;
+            margin: 0px 5px;
+            padding: 3px 8px;
+            font-size: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .control_button_old {
             margin: 0px;
             float: left;
             font-size: 40px;
@@ -77,15 +89,14 @@
             margin: 0px 5px;
             display: inline;
         }
-        .text_result_link {
-            color: gray;
+        a.text_result_link {
             font-size: 20px;
             text-decoration: none;
             margin: 0px 2px;
             display: inline;
             user-select: none;
         }
-        .text_result_link:hover {
+        a.text_result_link:hover {
             opacity: .5;
         }
         .text_result_anime {
@@ -147,6 +158,10 @@
             margin: 0px 5px;
             display: inline;
         }
+        #songs {
+            margin-left: 30px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -160,6 +175,9 @@
         <input type="radio" name="loop" id="loop_off_checkbox" checked><label for="loop_off_checkbox">Off</label>
         <input type="radio" name="loop" id="loop_current_checkbox"><label for="loop_current_checkbox">Current</label>
         <input type="radio" name="loop" id="loop_all_checkbox"><label for="loop_all_checkbox">All</label>
+        <div class="text" style="margin-left: 30px;">Mode</div>
+        <input type="radio" name="mode" id="audio_mode_checkbox" checked><label for="audio_mode_checkbox">Audio</label>
+        <input type="radio" name="mode" id="video_mode_checkbox"><label for="video_mode_checkbox">Video</label>
         <input type="checkbox" id="random_checkbox" style="margin-left: 30px;" checked><label for="random_checkbox">Random</label>
         <input type="checkbox" id="always_show_results_checkbox" style="margin-left: 30px;"><label for="always_show_results_checkbox">Always Show Results</label>
     </div>
@@ -170,15 +188,18 @@
     </div>
     <div class="container">
         <select name="artist" id="dropdown"></select>
-        <button onclick="viewList()">View List</button>
-        <button onclick="start()">Start</button>
+        <button id="view_list_button" onclick="viewList()">View List</button>
+        <button id="start_button" onclick="start()">Start</button>
+        <button id="prev_song_button" style="margin-left: 30px;" onclick="prevSong()">&laquo; Prev</button>
+        <button id="next_song_button" onclick="nextSong()">Next &raquo;</button>
+        <button id="show_results_button" onclick="showResults()">Results</button>
         <div id="songs" class="text"></div>
     </div>
     <div class="container" id="audio_container">
-        <audio controls autoplay id="player" onended="audioEnd()" onerror="audioError()" src="" type="audio/ogg"></audio>
-        <div class="control_button" onclick="prevSong()">⬅️</div>
-        <div class="control_button" onclick="nextSong()">➡️</div>
-        <div class="control_button" onclick="showResults()">✅</div>
+        <audio controls autoplay id="audio_player" onended="audioEnd()" onerror="audioError()" src="" type="audio/mpeg"></audio>
+    </div>
+    <div class="container" id="video_container">
+        <video controls autoplay id="video_player" onended="videoEnd()" onerror="videoError()" src="" type="video/mp4"></video>
     </div>
     <div class="container" id="results"></div>
 
@@ -187,6 +208,9 @@
         function start() {
             index = 0;
             list = [];
+            document.querySelector("#prev_song_button").style.display = "inline";
+            document.querySelector("#next_song_button").style.display = "inline";
+            document.querySelector("#show_results_button").style.display = "inline";
             document.querySelector("#audio_container").style.display = "block";
             for (let x of database[document.querySelector("#dropdown").value]) {
                 if (checkOpening(x) && checkIncludeExclude(x)) {
@@ -201,7 +225,7 @@
             }
             if (list.length == 0) {
                 document.querySelector("#songs").innerHTML = "No songs";
-                document.querySelector("#player").src = "";
+                document.querySelector("#audio_player").src = "";
                 hideResults();
             }
             else {
@@ -264,7 +288,18 @@
     
         // load song into audio player and update results
         function loadSong() {
-            document.querySelector("#player").src = "audio/" + list[index][1].split("/")[3];
+            if (document.querySelector("#audio_mode_checkbox").checked) {
+                document.querySelector("#audio_container").style.display = "block";
+                document.querySelector("#video_container").style.display = "none";
+                document.querySelector("#video_player").src = "";
+                document.querySelector("#audio_player").src = "audio/" + urlFile(list[index][1]);
+            }
+            else if (document.querySelector("#video_mode_checkbox").checked) {
+                document.querySelector("#audio_container").style.display = "none";
+                document.querySelector("#video_container").style.display = "block";
+                document.querySelector("#audio_player").src = "";
+                document.querySelector("#video_player").src = "video/" + urlFile(list[index][0]);
+            }
             document.querySelector("#songs").innerHTML = (index + 1) + " / " + list.length;
             if (document.querySelector("#always_show_results_checkbox").checked) {
                 showResults();
@@ -309,11 +344,13 @@
         // display results
         function showResults() {
             document.querySelector("#results").innerHTML =
-            '<div class="container_text" style="margin: 10px 0px;"><div class="text_result_anime">' + list[index][2] +
-            '</div><div class="text_result_type">' + shortenType(list[index][3]) + '</div>' +
-            '<a href="' + list[index][0] + '" class="text_result_link" target="_blank">🎥</a>' + '<a href="' + list[index][1] + '" class="text_result_link" target="_blank">🎵</a></div>' +
-            '<div class="container_text" style="margin: 10px 0px;"><div class="text_result_artist">' + list[index][4] +
-            '</div><div class="text_result_song">' + list[index][5] + '</div></div>';
+            '<div class="container_text" style="margin: 10px 0px;">' +
+            '<div class="text_result_anime">' + list[index][2] + '</div>' +
+            '<div class="text_result_type">' + shortenType(list[index][3]) + '</div>' +
+            '<a href="' + list[index][0] + '" class="text_result_link" target="_blank">🎥</a>' +
+            '<a href="' + list[index][1] + '" class="text_result_link" target="_blank">🎵</a></div>' +
+            '<div class="container_text" style="margin: 10px 0px;"><div class="text_result_artist">' + list[index][4] + '</div>' +
+            '<div class="text_result_song">' + list[index][5] + '</div></div>';
             
         }
     
@@ -325,17 +362,46 @@
         // when song ends, replay or skip to next depending on loop status
         function audioEnd() {
             if (document.querySelector("#loop_current_checkbox").checked) {
-                document.querySelector("#player").src = list[index][0];
+                document.querySelector("#audio_player").src = list[index][0];
             }
             if (document.querySelector("#loop_all_checkbox").checked) {
                 nextSong();
             }
         }
     
-        // if local file is not found, try catbox link
+        // if local file is not found, try url
         function audioError() {
-            if (list.length !== 0 && document.querySelector("#player").src.includes("audio")) {
-                document.querySelector("#player").src = list[index][1];
+            let qsa = document.querySelector("#audio_player");
+            if (!(list.length === 0 || qsa.src === "" || urlFile(qsa.src) === "index.html")) {
+                if (qsa.src.startsWith("file")) {
+                    qsa.src = list[index][1];
+                }
+                else if (qsa.src.startsWith("http")) {
+                    // todo
+                }
+            }
+        }
+
+        // when video ends, replay or skip to video depending on loop status
+        function videoEnd() {
+            if (document.querySelector("#loop_current_checkbox").checked) {
+                document.querySelector("#video_player").src = list[index][0];
+            }
+            if (document.querySelector("#loop_all_checkbox").checked) {
+                nextSong();
+            }
+        }
+    
+        // if local file is not found, try url
+        function videoError() {
+            let qsv = document.querySelector("#video_player");
+            if (!(list.length === 0 || qsv.src === "" || urlFile(qsv.src) === "index.html")) {
+                if (qsv.src.startsWith("file")) {
+                    qsv.src = list[index][0];
+                }
+                else if (qsv.src.startsWith("http")) {
+                    // todo
+                }
             }
         }
     
@@ -359,11 +425,21 @@
         function shortenType(type) {
             return type.replace("Opening ", "OP").replace("Ending ", "ED").replace("Insert Song", "IN");
         }
+
+        // get the last item in a url
+        function urlFile(url) {
+            let array = url.split("/");
+            return array[array.length - 1];
+        }
     
         // initial setup
         let index = 0;
         let list = [];
+        document.querySelector("#prev_song_button").style.display = "none";
+        document.querySelector("#next_song_button").style.display = "none";
+        document.querySelector("#show_results_button").style.display = "none";
         document.querySelector("#audio_container").style.display = "none";
+        document.querySelector("#video_container").style.display = "none";
         for (let x in database) {
             document.querySelector("#dropdown").innerHTML += "<option value=\"" + x + "\">" + x + "</option>";
         }
