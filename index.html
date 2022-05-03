@@ -371,12 +371,12 @@
     
         // if local file is not found, try url
         function audioError() {
-            let qsa = document.querySelector("#audio_player");
-            if (!(list.length === 0 || qsa.src === "" || urlFile(qsa.src) === "index.html")) {
-                if (qsa.src.startsWith("file")) {
-                    qsa.src = list[index][1];
+            let query = document.querySelector("#audio_player");
+            if (!(list.length === 0 || query.src === "" || query.src.endsWith(".html"))) {
+                if (query.src.startsWith("file")) {
+                    query.src = list[index][1];
                 }
-                else if (qsa.src.startsWith("http")) {
+                else if (query.src.startsWith("http")) {
                     // todo
                 }
             }
@@ -394,12 +394,12 @@
     
         // if local file is not found, try url
         function videoError() {
-            let qsv = document.querySelector("#video_player");
-            if (!(list.length === 0 || qsv.src === "" || urlFile(qsv.src) === "index.html")) {
-                if (qsv.src.startsWith("file")) {
-                    qsv.src = list[index][0];
+            let query = document.querySelector("#video_player");
+            if (!(list.length === 0 || query.src === "" || query.src.endsWith(".html"))) {
+                if (query.src.startsWith("file")) {
+                    query.src = list[index][0];
                 }
-                else if (qsv.src.startsWith("http")) {
+                else if (query.src.startsWith("http")) {
                     // todo
                 }
             }
