@@ -1,5 +1,5 @@
 # convert json files from anisongdb.com into js dictionary
-# {listname: [["videolink" "audiolink", "anime", "type", "artist", "song"], ...]}
+# {listname: [["video_link", "audio_link", "anime_name_en", "anime_name_jp", "anime_type", "anime_vintage", "song_artist", "song_name", "song_type", "song_difficulty"], ...]}
 
 import os
 import json
@@ -7,20 +7,23 @@ import json
 
 # return true if a dictionary key exists and has valid data
 def valid_key(d, k):
-    if k in d and d[k] is not None and d[k].strip() != "":
-        return True
-    else:
-        return False
+    return k in d and d[k] is not None and d[k].strip() != ""
 
 
 path = ''  # optional custom path
-key_720 = 'sept'
-key_480 = 'quatre'
-key_mp3 = 'mptrois'
-key_anime = 'Anime'
-key_type = 'Type'
-key_artist = 'Artist'
-key_song = 'SongName'
+hq_video_key = 'HQ'
+mq_video_key = 'MQ'
+audio_key = 'audio'
+anime_name_expand_key = 'animeExpandName'
+anime_name_en_key = 'animeENName'
+anime_name_jp_key = 'animeJPName'
+anime_type_key = 'animeType'
+anime_vintage_key = 'animeVintage'
+song_artist_key = 'songArtist'
+song_name_key = 'songName'
+song_type_key = 'songType'
+song_difficulty_key = 'songDifficulty'
+ann_id_key = 'annId'
 dictionary = {}
 total_songs = 0
 if not os.path.isdir(path + 'json'):
@@ -34,34 +37,38 @@ for file_name in os.listdir(path + 'json/'):
         data = json.load(json_file)
         json_file.close()
         for x in data:
-            if not valid_key(x, key_720) and not valid_key(x, key_480) and not valid_key(x, key_mp3):
+            if not valid_key(x, hq_video_key) and not valid_key(x, mq_video_key) and not valid_key(x, audio_key):
                 pass
-            elif valid_key(x, key_mp3) and x[key_mp3].endswith('.mp3'):
+            elif valid_key(x, audio_key) and x[audio_key].endswith('.mp3'):
                 video = ""
-                if valid_key(x, key_480):
-                    video = x[key_480]
-                if valid_key(x, key_720):
-                    video = x[key_720]
+                if valid_key(x, mq_video_key):
+                    video = x[mq_video_key]
+                if valid_key(x, hq_video_key):
+                    video = x[hq_video_key]
                 if video == "":
-                    print('Missing video: ' + x[key_anime] + ', ' + x[key_type] + ', ' + x[key_artist] + ', ' + x[key_song])
-                audio = x[key_mp3]
-                anime = x[key_anime].replace('"', '')
-                type = x[key_type]
-                artist = x[key_artist].replace('"', '')
-                song = x[key_song].replace('"', '')
-                song_list.append((video, audio, anime, type, artist, song))
+                    print('Missing video: ' + x[anime_name_en_key] + ', ' + x[song_type_key] + ', ' + x[song_artist_key] + ', ' + x[song_name_key])
+                audio = x[audio_key]
+                anime_name_en = x[anime_name_en_key].replace('"', '')
+                anime_name_jp = x[anime_name_jp_key].replace('"', '')
+                anime_type = x[anime_type_key]
+                anime_vintage = x[anime_vintage_key]
+                song_artist = x[song_artist_key].replace('"', '')
+                song_name = x[song_name_key].replace('"', '')
+                song_type = x[song_type_key]
+                song_difficulty = x[song_difficulty_key]
+                song_list.append((video, audio, anime_name_en, anime_name_jp, anime_type, anime_vintage, song_artist, song_name, song_type, song_difficulty))
                 total_songs += 1
             else:
-                print('Missing mp3: ' + x[key_anime] + ', ' + x[key_type] + ', ' + x[key_artist] + ', ' + x[key_song])
+                print('Missing mp3: ' + x[anime_name_en_key] + ', ' + x[song_type_key] + ', ' + x[song_artist_key] + ', ' + x[song_name_key])
         song_list = sorted(set(song_list), key=lambda i: str(i[2] + ' ' + i[3]).lower())  # remove duplicates and sort
         dictionary.update({list_name: song_list})
 
 total_lists = len(dictionary)
 if total_lists == 0:
-    print('Error: nothing found')
+    print('error: nothing found')
 else:
     print('total lists = ' + str(total_lists))
     print('total songs = ' + str(total_songs))
     database_file = open(path + 'database.js', 'w', encoding='utf-8')
-    database_file.write('let database = ' + json.dumps(dictionary))
+    database_file.write('let database = ' + json.dumps(dictionary, indent=None, separators=(',', ':')))
     database_file.close()

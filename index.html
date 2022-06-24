@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="robots" content="noindex,nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="database.js"></script>
     <title>AMQ Training</title>
@@ -14,7 +15,7 @@
         body {
             background: #1B1B1B;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: "Arial";
         }
         h1 {
             color: white;
@@ -98,6 +99,12 @@
         }
         a.text_result_link:hover {
             opacity: .5;
+        }
+        .text_result {
+            color: white;
+            font-size: 20px;
+            margin: 0px 5px;
+            display: block;
         }
         .text_result_anime {
             color: white;
@@ -213,17 +220,11 @@
             document.querySelector("#show_results_button").style.display = "inline";
             document.querySelector("#audio_container").style.display = "block";
             for (let x of database[document.querySelector("#dropdown").value]) {
-                if (checkOpening(x) && checkIncludeExclude(x)) {
-                    list.push(x);
-                }
-                else if (checkEnding(x) && checkIncludeExclude(x)) {
-                    list.push(x);
-                }
-                else if (checkInsert(x) && checkIncludeExclude(x)) {
+                if ((checkOpening(x) || checkEnding(x) || checkInsert(x)) && checkIncludeExclude(x)) {
                     list.push(x);
                 }
             }
-            if (list.length == 0) {
+            if (list.length === 0) {
                 document.querySelector("#songs").innerHTML = "No songs";
                 document.querySelector("#audio_player").src = "";
                 hideResults();
@@ -238,22 +239,23 @@
     
         // return true if song is opening and OP checkbox is marked
         function checkOpening(input) {
-            return input[3].startsWith("Opening") && document.querySelector("#op_checkbox").checked;
+            return input[song_type_index].startsWith("Opening") && document.querySelector("#op_checkbox").checked;
         }
     
         // return true if song is ending and ED checkbox is marked
         function checkEnding(input) {
-            return input[3].startsWith("Ending") && document.querySelector("#ed_checkbox").checked;
+            return input[song_type_index].startsWith("Ending") && document.querySelector("#ed_checkbox").checked;
         }
     
         // return true if song is insert and INS checkbox is marked
         function checkInsert(input) {
-            return input[3].startsWith("Insert") && document.querySelector("#in_checkbox").checked;
+            return input[song_type_index].startsWith("Insert") && document.querySelector("#in_checkbox").checked;
         }
     
         // return true if song passes include and exclude parameters
         function checkIncludeExclude(input) {
-            let anime = input[2].toLowerCase().trim();
+            let anime_name_en = input[anime_name_en_index].toLowerCase().trim();
+            let anime_name_jp = input[anime_name_jp_index].toLowerCase().trim();
             let include_values = [];
             let exclude_values = [];
             let result = document.querySelector("#include").value.trim() === "";
@@ -268,12 +270,12 @@
                 }
             }
             for (let x of include_values) {
-                if (anime.includes(x)) {
+                if (anime_name_en.includes(x) || anime_name_jp.includes(x)) {
                     result = true;
                 }
             }
             for (let x of exclude_values) {
-                if (anime.includes(x)) {
+                if (anime_name_en.includes(x) || anime_name_jp.includes(x)) {
                     result = false;
                 }
             }
@@ -292,13 +294,13 @@
                 document.querySelector("#audio_container").style.display = "block";
                 document.querySelector("#video_container").style.display = "none";
                 document.querySelector("#video_player").src = "";
-                document.querySelector("#audio_player").src = "audio/" + urlFile(list[index][1]);
+                document.querySelector("#audio_player").src = "audio/" + urlFile(list[index][audio_index]);
             }
             else if (document.querySelector("#video_mode_checkbox").checked) {
                 document.querySelector("#audio_container").style.display = "none";
                 document.querySelector("#video_container").style.display = "block";
                 document.querySelector("#audio_player").src = "";
-                document.querySelector("#video_player").src = "video/" + urlFile(list[index][0]);
+                document.querySelector("#video_player").src = "video/" + urlFile(list[index][video_index]);
             }
             document.querySelector("#songs").innerHTML = (index + 1) + " / " + list.length;
             if (document.querySelector("#always_show_results_checkbox").checked) {
@@ -343,15 +345,80 @@
     
         // display results
         function showResults() {
+            document.querySelector("#results").innerHTML = "";
+            /*
             document.querySelector("#results").innerHTML =
             '<div class="container_text" style="margin: 10px 0px;">' +
-            '<div class="text_result_anime">' + list[index][2] + '</div>' +
-            '<div class="text_result_type">' + shortenType(list[index][3]) + '</div>' +
-            '<a href="' + list[index][0] + '" class="text_result_link" target="_blank">🎥</a>' +
-            '<a href="' + list[index][1] + '" class="text_result_link" target="_blank">🎵</a></div>' +
-            '<div class="container_text" style="margin: 10px 0px;"><div class="text_result_artist">' + list[index][4] + '</div>' +
-            '<div class="text_result_song">' + list[index][5] + '</div></div>';
+            '<div class="text_result_anime">' + list[index][anime_name_en_index] + '</div>' +
+            '<div class="text_result_anime">' + list[index][anime_name_jp_index] + '</div>' +
+            '<div class="text_result_type">' + shortenType(list[index][song_type_index]) + '</div>' +
+            '<a href="' + list[index][video_index] + '" class="text_result_link" target="_blank">🎥</a>' +
+            '<a href="' + list[index][audio_index] + '" class="text_result_link" target="_blank">🎵</a></div>' +
+            '<div class="container_text" style="margin: 10px 0px;"><div class="text_result_artist">' + list[index][song_artist_index] + '</div>' +
+            '<div class="text_result_song">' + list[index][song_name_index] + '</div></div>';
+            */
+
+            let container = document.createElement("div");
+            container.classList.add("container_text");
+
+            let video_element = document.createElement("a");
+            video_element.classList.add("text_result_link");
+            video_element.href = list[index][video_index];
+            video_element.target = "_blank";
+            video_element.innerHTML = "🎥";
+
+            let audio_element = document.createElement("a");
+            audio_element.classList.add("text_result_link");
+            audio_element.href = list[index][audio_index];
+            audio_element.target = "_blank";
+            audio_element.innerHTML = "🎵";
+
+            let anime_name_en_element = document.createElement("div");
+            anime_name_en_element.classList.add("text_result");
+            anime_name_en_element.innerHTML = list[index][anime_name_en_index];
             
+            let anime_name_jp_element = document.createElement("div");
+            anime_name_jp_element.classList.add("text_result");
+            anime_name_jp_element.innerHTML = list[index][anime_name_jp_index];
+            anime_name_jp_element.style.margin = "0px 0px 10px 5px";
+
+            let anime_type_element = document.createElement("div");
+            anime_type_element.classList.add("text_result");
+            anime_type_element.innerHTML = list[index][anime_type_index];
+
+            let anime_vintage_element = document.createElement("div");
+            anime_vintage_element.classList.add("text_result");
+            anime_vintage_element.innerHTML = list[index][anime_vintage_index];
+
+            let song_artist_element = document.createElement("div");
+            song_artist_element.classList.add("text_result");
+            song_artist_element.innerHTML = list[index][song_artist_index];
+
+            let song_name_element = document.createElement("div");
+            song_name_element.classList.add("text_result");
+            song_name_element.innerHTML = list[index][song_name_index];
+            song_name_element.style.margin = "0px 0px 10px 5px";
+
+            let song_type_element = document.createElement("div");
+            song_type_element.classList.add("text_result");
+            song_type_element.innerHTML = list[index][song_type_index];
+
+            let song_difficulty_element = document.createElement("div");
+            song_difficulty_element.classList.add("text_result");
+            song_difficulty_element.innerHTML = list[index][song_difficulty_index] + "%";
+            song_difficulty_element.style.margin = "0px 0px 10px 5px";
+            
+            container.appendChild(anime_name_en_element);
+            container.appendChild(anime_name_jp_element);
+            container.appendChild(song_artist_element);
+            container.appendChild(song_name_element);
+            container.appendChild(song_type_element);
+            container.appendChild(song_difficulty_element);
+            container.appendChild(anime_type_element);
+            container.appendChild(anime_vintage_element);
+            container.appendChild(video_element);
+            container.appendChild(audio_element);
+            document.querySelector("#results").appendChild(container);
         }
     
         // hide results
@@ -362,7 +429,7 @@
         // when song ends, replay or skip to next depending on loop status
         function audioEnd() {
             if (document.querySelector("#loop_current_checkbox").checked) {
-                document.querySelector("#audio_player").src = list[index][0];
+                document.querySelector("#audio_player").src = list[index][audio_index];
             }
             if (document.querySelector("#loop_all_checkbox").checked) {
                 nextSong();
@@ -374,7 +441,7 @@
             let query = document.querySelector("#audio_player");
             if (!(list.length === 0 || query.src === "" || query.src.endsWith(".html"))) {
                 if (query.src.startsWith("file")) {
-                    query.src = list[index][1];
+                    query.src = list[index][audio_index];
                 }
                 else if (query.src.startsWith("http")) {
                     // todo
@@ -385,7 +452,7 @@
         // when video ends, replay or skip to video depending on loop status
         function videoEnd() {
             if (document.querySelector("#loop_current_checkbox").checked) {
-                document.querySelector("#video_player").src = list[index][0];
+                document.querySelector("#video_player").src = list[index][video_index];
             }
             if (document.querySelector("#loop_all_checkbox").checked) {
                 nextSong();
@@ -397,7 +464,7 @@
             let query = document.querySelector("#video_player");
             if (!(list.length === 0 || query.src === "" || query.src.endsWith(".html"))) {
                 if (query.src.startsWith("file")) {
-                    query.src = list[index][0];
+                    query.src = list[index][video_index];
                 }
                 else if (query.src.startsWith("http")) {
                     // todo
@@ -410,13 +477,44 @@
             document.querySelector("#results").innerHTML = "";
             for (let x of database[document.querySelector("#dropdown").value]) {
                 if ((checkOpening(x) || checkEnding(x) || checkInsert(x)) && checkIncludeExclude(x)) {
-                    document.querySelector("#results").innerHTML += '<div class="container_text">' +
-                    '<a href="' + x[0] + '" class="text_list_link" target="_blank">' + '🎥' + '</a>' +
-                    '<a href="' + x[1] + '" class="text_list_link" target="_blank">' + '🎵' + '</a>' +
-                    '<div class="text_list_anime">' + x[2] + '</div>' +
-                    '<div class="text_list_type">' + shortenType(x[3]) + '</div>' +
-                    '<div class="text_list_artist">' + x[4] + '</div>' +
-                    '<div class="text_list_song">' + x[5] + '</div></div>';
+                    let container = document.createElement("div");
+                    container.classList.add("container_text");
+
+                    let video_element = document.createElement("a");
+                    video_element.classList.add("text_list_link");
+                    video_element.href = x[video_index];
+                    video_element.target = "_blank";
+                    video_element.innerHTML = "🎥";
+
+                    let audio_element = document.createElement("a");
+                    audio_element.classList.add("text_list_link");
+                    audio_element.href = x[audio_index];
+                    audio_element.target = "_blank";
+                    audio_element.innerHTML = "🎵";
+
+                    let anime_name_en_element = document.createElement("div");
+                    anime_name_en_element.classList.add("text_list_anime");
+                    anime_name_en_element.innerHTML = x[anime_name_en_index];
+
+                    let song_type_element = document.createElement("div");
+                    song_type_element.classList.add("text_list_type");
+                    song_type_element.innerHTML = shortenType(x[song_type_index]);
+
+                    let song_artist_element = document.createElement("div");
+                    song_artist_element.classList.add("text_list_artist");
+                    song_artist_element.innerHTML = x[song_artist_index];
+
+                    let song_name_element = document.createElement("div");
+                    song_name_element.classList.add("text_list_song");
+                    song_name_element.innerHTML = x[song_name_index];
+
+                    container.appendChild(video_element);
+                    container.appendChild(audio_element);
+                    container.appendChild(anime_name_en_element);
+                    container.appendChild(song_type_element);
+                    container.appendChild(song_artist_element);
+                    container.appendChild(song_name_element);
+                    document.querySelector("#results").appendChild(container);
                 }
             }
         }
@@ -433,6 +531,16 @@
         }
     
         // initial setup
+        const video_index = 0;
+        const audio_index = 1;
+        const anime_name_en_index = 2;
+        const anime_name_jp_index = 3;
+        const anime_type_index = 4;
+        const anime_vintage_index = 5;
+        const song_artist_index = 6;
+        const song_name_index = 7;
+        const song_type_index = 8;
+        const song_difficulty_index = 9;
         let index = 0;
         let list = [];
         document.querySelector("#prev_song_button").style.display = "none";
@@ -440,8 +548,11 @@
         document.querySelector("#show_results_button").style.display = "none";
         document.querySelector("#audio_container").style.display = "none";
         document.querySelector("#video_container").style.display = "none";
-        for (let x in database) {
-            document.querySelector("#dropdown").innerHTML += "<option value=\"" + x + "\">" + x + "</option>";
+        for (let list_name of Object.keys(database)) {
+            let option = document.createElement("option");
+            option.value = list_name;
+            option.innerHTML = list_name;
+            document.querySelector("#dropdown").appendChild(option);
         }
         document.addEventListener("keydown", function(e) { if (e.key === "Enter") start(); });
     </script>
