@@ -46,7 +46,7 @@ for file_name in os.listdir(path + 'json/'):
                 if valid_key(x, hq_video_key):
                     video = x[hq_video_key]
                 if video == "":
-                    print('Missing video: ' + x[anime_name_en_key] + ', ' + x[song_type_key] + ', ' + x[song_artist_key] + ', ' + x[song_name_key])
+                    print('Missing video: ' + str(x))
                 audio = x[audio_key]
                 anime_name_en = x[anime_name_en_key].replace('"', '')
                 anime_name_jp = x[anime_name_jp_key].replace('"', '')
@@ -59,7 +59,7 @@ for file_name in os.listdir(path + 'json/'):
                 song_list.append((video, audio, anime_name_en, anime_name_jp, anime_type, anime_vintage, song_artist, song_name, song_type, song_difficulty))
                 total_songs += 1
             else:
-                print('Missing mp3: ' + x[anime_name_en_key] + ', ' + x[song_type_key] + ', ' + x[song_artist_key] + ', ' + x[song_name_key])
+                print('Missing mp3: ' + str(x))
         song_list = sorted(set(song_list), key=lambda i: str(i[2] + ' ' + i[3]).lower())  # remove duplicates and sort
         dictionary.update({list_name: song_list})
 
