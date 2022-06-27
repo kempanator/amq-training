@@ -18,3 +18,9 @@ A local webpage for practicing matching anime songs to their series. This progra
 
 ## Downloading lists
 Running download-audio.py will create an audio folder and fill it with mp3 files of every song from every json file. The webpage will automatically try to use local files first then try the url.
+
+## Merging Lists
+1. create a new folder in json folder with the new list name
+2. add json files to this folder
+3. run merge-json.py
+4. merged json file will be created in json folder
