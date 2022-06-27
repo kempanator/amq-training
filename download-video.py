@@ -63,7 +63,7 @@ for file_name in os.listdir(json_path):
                             id3.tag.album = x[anime_name_en_key]
                             id3.tag.save()
                     else:
-                        print('Missing mp3: ' + x[anime_name_en_key] + ', ' + x[song_type_key] + ', ' + x[song_artist_key] + ', ' + x[song_name_key])
+                        print('Missing mp3: ' + str(x))
                 if mode == 'video' or mode == 'both':
                     if not os.path.isdir(video_path):
                         os.mkdir(video_path)
@@ -78,7 +78,7 @@ for file_name in os.listdir(json_path):
                             print(new_file_name + ' - ' + x[anime_name_en_key] + ' - ' + x[song_type_key])
                             urllib.request.urlretrieve(link, video_path + new_file_name)
                     else:
-                        print('Missing video: ' + x[anime_name_en_key] + ', ' + x[song_type_key] + ', ' + x[song_artist_key] + ', ' + x[song_name_key])
+                        print('Missing video: ' + str(x))
 
 if len(os.listdir(json_path)) == 0:
     print('Error: no json files found')
